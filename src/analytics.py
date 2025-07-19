@@ -6,12 +6,19 @@ from collections import Counter
 import re
 from datetime import datetime
 import logging
+import os
+import yaml
+
+# Load configuration
+with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.yaml'), 'r', encoding='utf-8') as f:
+    CONFIG = yaml.safe_load(f)
 
 class AnalyticsEngine:
     """Analytics engine for analyzing parsed verdict content"""
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.config = CONFIG
         
     def analyze_text_statistics(self, content: str) -> Dict[str, Any]:
         """Analyze basic text statistics"""

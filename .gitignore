@@ -58,3 +58,5 @@ Thumbs.db
 # Environment variables
 .env
 .env.local 
+e2e_output.txt 
+real_e2e_output.txt 

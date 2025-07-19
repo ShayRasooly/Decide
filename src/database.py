@@ -3,10 +3,15 @@ import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 import logging
+import yaml
+
+# Load configuration
+with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.yaml'), 'r', encoding='utf-8') as f:
+    CONFIG = yaml.safe_load(f)
 
 class DatabaseManager:
-    def __init__(self, db_path: str = "data/verdicts.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None):
+        self.db_path = db_path or CONFIG.get('sqlite_db_path', 'data/verdicts.db')
         self._ensure_data_directory()
         self._init_database()
         

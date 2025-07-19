@@ -1,0 +1,25 @@
+# Project configuration file
+
+website_url: "https://www.gov.il/he/Departments/DynamicCollectors/verdict_the_rabbinical_courts?skip=0"
+download_dir: "downloads"
+batch_size: 3
+max_files: 10
+user_agent: "Mozilla/5.0"
+referer: "https://www.gov.il/he/Departments/DynamicCollectors/verdict_the_rabbinical_courts"
+
+# Feature flags
+run_real_e2e: true
+run_batch_e2e: true
+run_code_e2e: true
+
+# Test selection
+run_downloader_test: true
+run_parser_test: true
+run_pipeline_test: true
+
+# Output files
+e2e_output_file: "e2e_output.txt"
+real_e2e_output_file: "real_e2e_output.txt"
+
+# Database
+sqlite_db_path: "data/verdicts.db" 

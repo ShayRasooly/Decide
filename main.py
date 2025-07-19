@@ -10,6 +10,11 @@ import sys
 from typing import List, Dict, Any
 import json
 from datetime import datetime
+import yaml
+
+# Load configuration
+with open(os.path.join(os.path.dirname(__file__), 'config.yaml'), 'r', encoding='utf-8') as f:
+    CONFIG = yaml.safe_load(f)
 
 # Add src to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
@@ -32,8 +37,12 @@ logging.basicConfig(
 class VerdictAnalysisPipeline:
     """Main pipeline for downloading, parsing, and analyzing verdict files"""
     
-    def __init__(self, download_dir: str = "downloads", max_files: int = 10):
-        self.downloader = VerdictDownloader(download_dir=download_dir, max_files=max_files)
+    def __init__(self, download_dir: str = None, max_files: int = None):
+        self.config = CONFIG
+        self.downloader = VerdictDownloader(
+            download_dir=download_dir or self.config.get('download_dir', 'downloads'),
+            max_files=max_files or self.config.get('max_files', 10)
+        )
         self.parser = FileParser()
         self.db = DatabaseManager()
         self.analytics = AnalyticsEngine()
@@ -45,7 +54,7 @@ class VerdictAnalysisPipeline:
         
         # Step 1: Download files
         self.logger.info("Step 1: Downloading verdict files")
-        downloaded_files = self.downloader.download_verdicts(max_files=max_files)
+        downloaded_files = self.downloader.download_verdicts(max_files=max_files or self.config.get('max_files', 10))
         
         if not downloaded_files:
             self.logger.warning("No files downloaded")
@@ -107,10 +116,11 @@ class VerdictAnalysisPipeline:
                 
         # Step 4: Generate reports
         self.logger.info("Step 4: Generating reports")
+        report_file = self.config.get('e2e_output_file', 'analysis_report.txt')
         report = self.analytics.generate_report(analytics_results)
         
         # Save report to file
-        with open('analysis_report.txt', 'w', encoding='utf-8') as f:
+        with open(report_file, 'w', encoding='utf-8') as f:
             f.write(report)
             
         # Get database statistics
@@ -125,7 +135,7 @@ class VerdictAnalysisPipeline:
             'database_stats': db_stats,
             'files_processed': len(parsed_results),
             'analytics_generated': len(analytics_results),
-            'report_file': 'analysis_report.txt'
+            'report_file': report_file
         }
         
         self.logger.info("Pipeline completed successfully")
@@ -148,9 +158,9 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Verdict Analysis Pipeline')
-    parser.add_argument('--max-files', type=int, default=10, 
+    parser.add_argument('--max-files', type=int, default=CONFIG.get('max_files', 10), 
                        help='Maximum number of files to download')
-    parser.add_argument('--download-dir', type=str, default='downloads',
+    parser.add_argument('--download-dir', type=str, default=CONFIG.get('download_dir', 'downloads'),
                        help='Directory to store downloaded files')
     parser.add_argument('--status', action='store_true',
                        help='Show current system status')

@@ -5,12 +5,18 @@ import logging
 from docx import Document
 from pypdf import PdfReader
 import io
+import yaml
+
+# Load configuration
+with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.yaml'), 'r', encoding='utf-8') as f:
+    CONFIG = yaml.safe_load(f)
 
 class FileParser:
     """Parser for different file types to extract text content"""
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.config = CONFIG
         
     def get_file_hash(self, file_path: str) -> str:
         """Generate SHA-256 hash of file content"""

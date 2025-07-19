@@ -6,7 +6,7 @@ from src.downloader import VerdictDownloader
 from src.parser import FileParser
 from src.database import DatabaseManager
 
-def test_end2end_download_parse_store_and_read(capfd):
+def test_pipeline_e2e(capfd):
     temp_dir = tempfile.mkdtemp()
     db_path = os.path.join(temp_dir, 'test.db')
     try:

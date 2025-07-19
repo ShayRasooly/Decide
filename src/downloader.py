@@ -10,15 +10,23 @@ import requests
 import urllib.parse
 import re
 from requests.exceptions import RequestException
+import yaml
+
+# Load configuration
+with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.yaml'), 'r', encoding='utf-8') as f:
+    CONFIG = yaml.safe_load(f)
 
 class VerdictDownloader:
     """Enhanced downloader for verdict files with database integration"""
     
-    def __init__(self, download_dir: str = "downloads", max_files: int = 10):
-        self.download_dir = download_dir
-        self.max_files = max_files
+    def __init__(self, download_dir: str = None, max_files: int = None):
+        self.download_dir = str(download_dir) if download_dir is not None else str(CONFIG.get('download_dir', 'downloads'))
+        self.max_files = int(max_files) if max_files is not None else int(CONFIG.get('max_files', 10))
         self.logger = logging.getLogger(__name__)
         self._ensure_download_directory()
+        self.website_url = CONFIG.get('website_url') or ''
+        self.user_agent = CONFIG.get('user_agent', 'Mozilla/5.0')
+        self.referer = CONFIG.get('referer', self.website_url)
         
     def _ensure_download_directory(self):
         """Ensure download directory exists"""
@@ -38,8 +46,8 @@ class VerdictDownloader:
         try:
             session = requests.Session()
             headers = {
-                "User-Agent": "Mozilla/5.0",
-                "Referer": "https://www.gov.il/he/Departments/DynamicCollectors/verdict_the_rabbinical_courts"
+                "User-Agent": self.user_agent,
+                "Referer": self.referer
             }
             
             response = session.get(url, headers=headers, timeout=30)
@@ -84,7 +92,7 @@ class VerdictDownloader:
         driver = None
         try:
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-            driver.get("https://www.gov.il/he/Departments/DynamicCollectors/verdict_the_rabbinical_courts?skip=0")
+            driver.get(self.website_url)
             
             # Wait for page to load
             time.sleep(5)
@@ -140,14 +148,14 @@ class VerdictDownloader:
             'success_rate': len(successful_downloads) / len(downloaded_files) if downloaded_files else 0,
             'total_size_bytes': total_size,
             'total_size_mb': round(total_size / (1024 * 1024), 2)
-        } 
+        }
 
     def download_first_verdict(self) -> dict:
         """Download only the first verdict file and return result dict."""
         driver = None
         try:
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-            driver.get("https://www.gov.il/he/Departments/DynamicCollectors/verdict_the_rabbinical_courts?skip=0")
+            driver.get(self.website_url)
             time.sleep(5)
             verdict_links = driver.find_elements(By.CSS_SELECTOR, "a[href*='/BlobFolder/']")
             if verdict_links:
@@ -160,8 +168,8 @@ class VerdictDownloader:
                         for cookie in driver.get_cookies():
                             session.cookies.set(cookie['name'], cookie['value'])
                         headers = {
-                            "User-Agent": "Mozilla/5.0",
-                            "Referer": driver.current_url
+                            "User-Agent": self.user_agent,
+                            "Referer": self.referer
                         }
                         response = session.get(url, headers=headers)
                         response.raise_for_status()
