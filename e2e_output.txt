@@ -1,0 +1,2 @@
+Verdict from DB: {'id': 1, 'filename': 'test.docx', 'file_path': 'C:\\Users\\shay\\AppData\\Local\\Temp\\tmpunykcwu_\\test.docx', 'file_size': 17, 'download_date': '2025-07-19 15:11:57', 'file_type': '.docx', 'content_hash': 'dummyhash', 'status': 'downloaded'}
+Parsed Content from DB: [{'id': 1, 'verdict_id': 1, 'content_type': 'full_text', 'content': 'dummy content', 'parsed_date': '2025-07-19 15:11:57'}]
