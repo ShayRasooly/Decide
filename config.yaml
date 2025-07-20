@@ -22,4 +22,92 @@ e2e_output_file: "e2e_output.txt"
 real_e2e_output_file: "real_e2e_output.txt"
 
 # Database
-sqlite_db_path: "data/verdicts.db" 
+sqlite_db_path: "data/verdicts.db"
+
+# AI Extractor settings
+extractor_enabled: true
+extractor_confidence_threshold: 0.7
+extractor_supported_formats: ['docx', 'pdf']
+extractor_output_format: 'json'
+
+# Extractor Patterns and Magic Strings
+extractor_patterns:
+  court_patterns:
+    - '^\s*בית המשפט העליון'
+    - '^\s*בית המשפט המחוזי(?:\s+[^\n]+)?'
+    - '^\s*בית המשפט המחוזי בתל אביב'
+    - '^\s*בית המשפט השלום'
+    - '^\s*בית הדין הרבני הגדול'
+    - '^\s*בית הדין הרבני האזורי'
+    - '^\s*בבית הדין הרבני הגדול ירושלים'
+    - '^\s*בבית הדין הרבני האזורי [^\n]*'
+  
+  judge_patterns:
+    - '^\s*כבוד השופט(?:ת)?\s+[^\n]+'
+    - '^\s*כבוד הדיין(?:ים)?[:]?\s+[^\n]+'
+    - '^\s*הרב[:]?\s+[^\n]+'
+    - '^\s*לפני כבוד הדיינים[:]?\s+[^\n]+'
+    - '^\s*כבוד השופט(?:ת)?[:]?\s+[^\n]+'
+    - '^\s*כבוד הדיינים[:]?\s+[^\n]+'
+    - '^\s*הרב\s+[^\n]+'
+  
+  case_patterns:
+    - '^\s*תיק\s*[:：]?\s*№?\s*([\d\/-]+)'
+    - '^\s*תיק\s*[:：]?\s*([\d\/-]+)'
+    - '^\s*([\d\/-]+)'
+  date_patterns:
+    - '^\s*תאריך\s*[:：]?\s*(\d{1,2}/\d{1,2}/\d{4})'
+    - '^\s*תאריך\s*[:：]?\s*(\d{1,2}-\d{1,2}-\d{4})'
+    - '^\s*תאריך\s*[:：]?\s*(\d{1,2}\.\d{1,2}\.\d{4})'
+    - '^\s*(\d{1,2}/\d{1,2}/\d{4})'
+    - '^\s*(\d{1,2}-\d{1,2}-\d{4})'
+    - '^\s*(\d{1,2}\.\d{1,2}\.\d{4})'
+  
+  party_patterns:
+    - '^\s*בין\s+([^\n]+)\s+לבין\s+([^\n]+)'
+    - '^\s*תובע[:]?\s+([^\n]+)'
+    - '^\s*נתבע[:]?\s+([^\n]+)'
+    - '^\s*בין\s+([^\n]+)\s+ל[^\n]+'
+  
+  verdict_type_patterns:
+    - '^\s*פסק דין'
+    - '^\s*החלטה'
+    - '^\s*צו'
+  
+  # Keywords for fallback extraction
+  court_keywords:
+    - 'בית המשפט'
+    - 'בית הדין'
+  
+  judge_keywords:
+    - 'כבוד השופט'
+    - 'כבוד השופטת'
+    - 'כבוד הדיין'
+    - 'כבוד הדיינים'
+    - 'הרב'
+  
+  case_keywords:
+    - 'תיק'
+    - 'ת.א.'
+    - 'ע"א'
+    - 'ע"מ'
+  
+  date_keywords:
+    - 'תאריך'
+    - 'תאריך:'
+    - 'תאריך:'
+  
+  party_keywords:
+    - 'תובע'
+    - 'נתבע'
+    - 'בין'
+    - 'לבין'
+  
+  verdict_type_keywords:
+    - 'פסק דין'
+    - 'החלטה'
+    - 'צו'
+  
+  # Performance settings
+  max_lines_to_scan: 20
+  confidence_threshold: 0.7 
