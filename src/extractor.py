@@ -20,12 +20,24 @@ with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.yaml'
 class AIExtractor:
     """AI-powered extractor for structured data from verdict documents"""
     
-    def __init__(self) -> None:
-        """Initialize the AI extractor with configuration-based patterns"""
+    def __init__(self, debug_output_path: Optional[str] = None) -> None:
+        print(f"AIExtractor __init__ called with debug_output_path={debug_output_path}")
         self.logger = logging.getLogger(__name__)
         
         # Load patterns from configuration
         extractor_config = CONFIG.get('extractor_patterns', {})
+        self.use_ai = CONFIG.get('extractor_use_ai', False)
+        self.debug_output_path = debug_output_path
+        self.debug_enabled = CONFIG.get('extractor_debug_output', False)
+        self.ner_pipeline = None
+        if self.use_ai:
+            try:
+                from transformers import pipeline  # type: ignore
+                self.ner_pipeline = pipeline("ner", model="avichr/heBERT_NER", aggregation_strategy="simple")  # type: ignore
+            except Exception as e:
+                print(f"WARNING: Could not load AI NER model: {e}. Falling back to regex extraction.")
+                self.use_ai = False
+        print(f"AIExtractor config: use_ai={self.use_ai}, debug_enabled={self.debug_enabled}")
         
         # Compile regex patterns for better performance
         self.court_patterns = [re.compile(pattern, re.IGNORECASE | re.MULTILINE) 
@@ -76,7 +88,11 @@ class AIExtractor:
                 self.logger.warning(f"Missing {keyword_name} in configuration")
     
     def extract_verdict_data(self, file_path: str, content: str) -> Dict[str, Any]:
-        """Extract structured data from verdict DOCX content using improved logic"""
+        print(f"extract_verdict_data called for {file_path}, self.use_ai={self.use_ai}")
+        if self.use_ai and self.ner_pipeline is not None:
+            print("extract_verdict_data: use_ai=True, dispatching to _extract_with_ai")
+            return self._extract_with_ai(file_path, content)
+        print("extract_verdict_data: using regex extraction")
         try:
             # Early termination for empty content
             if not content or not content.strip():
@@ -425,3 +441,50 @@ class AIExtractor:
         summary_parts.append(f"Confidence: {extracted_data.get('confidence_score', 0):.2f}")
         
         return ' | '.join(summary_parts) 
+
+    def _extract_with_ai(self, file_path: str, content: str) -> Dict[str, Any]:
+        import os
+        print(f"_extract_with_ai called for file: {file_path}")
+        print(f"Current working directory: {os.getcwd()}")
+        try:
+            if self.ner_pipeline is None:
+                print("AIExtractor: ner_pipeline is None, returning empty dict")
+                return {}
+            entities = self.ner_pipeline(content)
+            print(f"AIExtractor: entities from NER pipeline: {entities}")
+            print(f"Type of entities: {type(entities)}, Length: {len(entities) if hasattr(entities, '__len__') else 'N/A'}")
+            debug_line = f"DEBUG: Raw NER entities for {file_path}: {entities}\n"
+            print(debug_line)
+            print(f"self.debug_enabled: {self.debug_enabled}, self.debug_output_path: {self.debug_output_path}")
+            if self.debug_enabled and self.debug_output_path:
+                print(f"About to write debug output to {self.debug_output_path} (cwd: {os.getcwd()})")
+                try:
+                    with open(self.debug_output_path, "a", encoding="utf-8") as f:
+                        f.write(debug_line)
+                        f.flush()
+                except Exception as file_exc:
+                    print(f"Exception while writing debug file: {file_exc}")
+            # Group entities by label
+            entity_map = {}
+            for ent in entities:
+                label = ent['entity_group']
+                if label not in entity_map:
+                    entity_map[label] = []
+                entity_map[label].append(ent['word'])
+            # Map NER labels to our fields (heuristic)
+            data = {
+                'verdict_id': next((w for w in entity_map.get('MISC', []) if w.isdigit() or '/' in w), None),
+                'court_name': next((w for w in entity_map.get('ORG', []) if 'בית' in w or 'דין' in w), None),
+                'judge_name': next((w for w in entity_map.get('PER', []) if 'הרב' in w or 'שופט' in w), None),
+                'case_number': next((w for w in entity_map.get('MISC', []) if w.isdigit() or '/' in w), None),
+                'verdict_date': next((w for w in entity_map.get('DATE', []) if w), None),
+                'parties': entity_map.get('PER', []),
+                'verdict_type': next((w for w in entity_map.get('MISC', []) if 'פסק' in w or 'החלטה' in w or 'צו' in w), None),
+                'confidence_score': 1.0 if entities else 0.0,
+                'extraction_timestamp': datetime.now().isoformat(),
+                'file_path': file_path
+            }
+            return data
+        except Exception as e:
+            self.logger.error(f"Error during AI extraction: {str(e)}")
+            return self._create_empty_result() 
