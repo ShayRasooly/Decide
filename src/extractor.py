@@ -26,7 +26,9 @@ class AIExtractor:
         
         # Load patterns from configuration
         extractor_config = CONFIG.get('extractor_patterns', {})
-        self.use_ai = CONFIG.get('extractor_use_ai', False)
+        # Fallback: AI NER model (avichr/heBERT_NER) does not extract entities from real Hebrew legal DOCX files.
+        # Defaulting to regex extraction for all fields. To re-enable AI, set extractor_use_ai: true in config.yaml.
+        self.use_ai = False
         self.debug_output_path = debug_output_path
         self.debug_enabled = CONFIG.get('extractor_debug_output', False)
         self.ner_pipeline = None
