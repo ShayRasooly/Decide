@@ -12,6 +12,13 @@ run_real_e2e: true
 run_batch_e2e: true
 run_code_e2e: true
 
+# Extractor feature flags
+regex_extractor_enabled: true
+openai_extractor_enabled: true
+azure_extractor_enabled: false
+google_extractor_enabled: false
+huggingface_extractor_enabled: false
+
 # Test selection
 run_downloader_test: true
 run_parser_test: true
