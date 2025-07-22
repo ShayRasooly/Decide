@@ -1,62 +1,45 @@
-# Downloaded files
-downloads/*.doc
-downloads/*.docx
-downloads/*.pdf
-
-# Database files
-data/
+# Ignore data, debug, and output files
 *.db
 *.sqlite
 *.sqlite3
-
-# Logs
 *.log
-pipeline.log
+*.bak
+*.tmp
+*.zip
 
-# Test coverage
-htmlcov/
-.coverage
-.pytest_cache/
+# Ignore all output and debug files (by name)
+*debug*.txt
+*output*.txt
+*test_output*.txt
+*batch_test_output*.txt
+*ai_ner_debug_output*.txt
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
+# Ignore verdicts and data directories (actual data)
+verdicts_all/
+verdicts_local/
 downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+data/
+*.doc
+*.docx
+*.pdf
 
-# Virtual environments
-venv/
-env/
-ENV/
-
-# IDE
-.vscode/
-.idea/
+# Ignore temporary and backup files
 *.swp
 *.swo
-
-# OS
+*~
 .DS_Store
 Thumbs.db
 
-# Environment variables
+# Ignore Python cache and build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+build/
+dist/
+*.egg-info/
+
+# Ignore environment and config files that are not meant for sharing
 .env
-.env.local 
-e2e_output.txt 
-real_e2e_output.txt 
+.env.*
+config.local.yaml 
