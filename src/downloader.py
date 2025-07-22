@@ -19,26 +19,14 @@ with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.yaml'
 class VerdictDownloader:
     """Enhanced downloader for verdict files with database integration"""
     
-    def __init__(self, download_dir: Optional[str] = None, max_files: Optional[int] = None):
-        # Ensure download_dir is always a string
-        if download_dir is None:
-            download_dir = str(CONFIG.get('download_dir', 'verdicts_all'))
-        else:
-            download_dir = str(download_dir)
-        # Ensure max_files is always an int
-        if max_files is None:
-            max_files = int(CONFIG.get('max_files', 10))
-        else:
-            max_files = int(max_files)
-        self.download_dir = download_dir
-        self.max_files = max_files
+    def __init__(self, download_dir: str = None, max_files: int = None):
+        self.download_dir = str(download_dir) if download_dir is not None else str(CONFIG.get('download_dir', 'downloads'))
+        self.max_files = int(max_files) if max_files is not None else int(CONFIG.get('max_files', 10))
         self.logger = logging.getLogger(__name__)
         self._ensure_download_directory()
         self.website_url = CONFIG.get('website_url') or ''
         self.user_agent = CONFIG.get('user_agent', 'Mozilla/5.0')
-        self.referer = CONFIG.get('referer', '')
-        self.allow_duplicates = CONFIG.get('allow_duplicates', False)
-        self.enable_paging = CONFIG.get('enable_paging', True)
+        self.referer = CONFIG.get('referer', self.website_url)
         
     def _ensure_download_directory(self):
         """Ensure download directory exists"""
@@ -93,62 +81,52 @@ class VerdictDownloader:
                 'url': url
             }
             
-    def download_verdicts(self, max_files: Optional[int] = None) -> List[Dict[str, Any]]:
-        """Download verdict files from the government website, supporting pagination via skip parameter."""
+    def download_verdicts(self, max_files: int = None) -> List[Dict[str, Any]]:
+        """Download verdict files from the government website"""
         if max_files is None:
             max_files = self.max_files
-        else:
-            max_files = int(max_files)
-        self.logger.info(f"Starting download of up to {max_files} verdict files (with pagination)")
-        downloaded_files = []
-        skip = 0
-        page_size = 20  # Guess: number of results per page; adjust if needed
-        total_downloaded = 0
+            
+        self.logger.info(f"Starting download of up to {max_files} verdict files")
+        
+        # Initialize WebDriver
         driver = None
         try:
-            while total_downloaded < max_files:
-                if self.enable_paging:
-                    paged_url = re.sub(r"skip=\d+", f"skip={skip}", self.website_url)
-                else:
-                    paged_url = re.sub(r"skip=\d+", "skip=0", self.website_url)
-                driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-                driver.get(paged_url)
-                time.sleep(5)
-                page_links = driver.find_elements(By.CSS_SELECTOR, "a[href*='/BlobFolder/']")
-                new_links = []
-                new_filenames = []
-                for link in page_links:
-                    url = link.get_attribute("href")
-                    if not url:
-                        continue
-                    filename = self._sanitize_filename(url)
-                    file_path = os.path.join(self.download_dir, filename)
-                    if not self.allow_duplicates and os.path.exists(file_path):
-                        self.logger.info(f"File already exists, skipping: {file_path}")
-                        continue
-                    new_links.append(link)
-                    new_filenames.append(filename)
-                if not self.allow_duplicates and not new_links:
-                    self.logger.info("All files on this page already exist. Stopping pagination to avoid infinite loop.")
-                    break
-                for link in new_links:
-                    url = link.get_attribute("href")
-                    if not url:
-                        continue
-                    filename = self._sanitize_filename(url)
-                    self.logger.info(f"Downloading file {total_downloaded+1}/{max_files}: {filename}")
-                    result = self._download_file(url, filename)
-                    downloaded_files.append(result)
-                    total_downloaded += 1
-                    time.sleep(1)
-                driver.quit()
-                driver = None
-                if self.enable_paging:
-                    skip += page_size
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+            driver.get(self.website_url)
+            
+            # Wait for page to load
+            time.sleep(5)
+            
+            # Find download links
+            verdict_links = driver.find_elements(By.CSS_SELECTOR, "a[href*='/BlobFolder/']")
+            
+            if not verdict_links:
+                self.logger.warning("No download links found on the page")
+                return []
+                
+            self.logger.info(f"Found {len(verdict_links)} potential download links")
+            
+            # Download files (limit to max_files)
+            downloaded_files = []
+            for i, link in enumerate(verdict_links[:max_files]):
+                url = link.get_attribute("href")
+                if not url:
+                    continue
+                    
+                filename = self._sanitize_filename(url)
+                self.logger.info(f"Downloading file {i+1}/{min(len(verdict_links), max_files)}: {filename}")
+                
+                result = self._download_file(url, filename)
+                downloaded_files.append(result)
+                
+                # Add small delay between downloads
+                time.sleep(1)
+                
             return downloaded_files
+            
         except Exception as e:
             self.logger.error(f"Error during download process: {e}")
-            return downloaded_files
+            return []
         finally:
             if driver:
                 driver.quit()
