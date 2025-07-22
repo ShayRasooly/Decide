@@ -11,9 +11,6 @@ referer: "https://www.gov.il/he/Departments/DynamicCollectors/verdict_the_rabbin
 run_real_e2e: true
 run_batch_e2e: true
 run_code_e2e: true
-store_file_content: true
-extractor_use_ai: true
-extractor_debug_output: true
 
 # Test selection
 run_downloader_test: true
@@ -23,110 +20,5 @@ run_pipeline_test: true
 # Output files
 e2e_output_file: "e2e_output.txt"
 real_e2e_output_file: "real_e2e_output.txt"
-
 # Database
-sqlite_db_path: "data/verdicts.db"
-
-# AI Extractor settings
-extractor_enabled: true
-extractor_confidence_threshold: 0.7
-extractor_supported_formats: ['docx', 'pdf']
-extractor_output_format: 'json'
-
-# Extractor Patterns and Magic Strings
-extractor_patterns:
-  court_patterns:
-    - '^\s*בבית הדין הרבני הגדול ירושלים'
-    - '^\s*בבית הדין הרבני הגדול(?: [^\n]+)?'
-    - '^\s*בית הדין הרבני הגדול'
-    - '^\s*בית המשפט העליון'
-    - '^\s*בית המשפט המחוזי(?:\s+[^\n]+)?'
-    - '^\s*בית המשפט השלום'
-    - '^\s*בבית הדין הרבני(?: [^\n]+)?'
-    - '^\s*בית הדין(?: [^\n]+)?'
-    - '^\s*בבית המשפט(?: [^\n]+)?'
-
-  judge_patterns:
-    - '^\s*לפני כבוד הדיינים[:]?\s*([\u05D0-\u05EA\s,]+)'
-    - '^\s*לפני כבוד השופט(?:ת)?[:]?\s*([\u05D0-\u05EA\s,]+)'
-    - '^\s*הרב(?: [^\n,]+,?)+'
-    - '^\s*הרב\s+[^\n]+'
-    - '^\s*כבוד השופט(?:ת)?\s+[^\n]+'
-    - '^\s*כבוד הדיין(?:ים)?[:]?\s*([\u05D0-\u05EA\s,]+)'
-    - '^\s*לפני הדיינים[:]?\s*([\u05D0-\u05EA\s,]+)'
-    - '^\s*לפני השופט(?:ת)?[:]?\s*([\u05D0-\u05EA\s,]+)'
-
-  case_patterns:
-    - '^\s*תיק\s*[:：]?\s*([\d\/\-]+)'
-    - '^\s*תיק\s*([^\n]+)'
-    - '^\s*([\d\/\-]{6,})'
-    - '^\s*מספר תיק\s*[:：]?\s*([\d\/\-]+)'
-    - '^\s*מספר\s*[:：]?\s*([\d\/\-]+)'
-
-  date_patterns:
-    - '(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})'
-    - '\u05D9"[^\n]+'
-    - 'מיום\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})'
-    - 'ניתן ביום\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})'
-    - 'ביום\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})'
-    - 'תאריך\s*[:：]?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})'
-
-  party_patterns:
-    - '^\s*המערער(?:ת)?:\s*([^\n]+)'
-    - '^\s*המשיב(?:ה)?:\s*([^\n]+)'
-    - '^\s*המבקש(?:ת)?:\s*([^\n]+)'
-    - '^\s*התובע(?:ת)?:\s*([^\n]+)'
-    - '^\s*הנתבע(?:ת)?:\s*([^\n]+)'
-    - '^\s*בין\s*([^\n]+)\s*לבין\s*([^\n]+)'
-    - '^\s*הצדדים:\s*([^\n]+)'
-
-  verdict_type_patterns:
-    - '^\s*פסק דין'
-    - '^\s*החלטה'
-    - '^\s*צו'
-    - '^\s*פסק-דין'
-    - '^\s*פסק-דין חלקי'
-    - '^\s*פסק-דין משלים'
-    - '^\s*פסק-דין נוסף'
-    - '^\s*פסק-דין ביניים'
-    - '^\s*פסק דין משלים'
-    - '^\s*פסק דין נוסף'
-    - '^\s*פסק דין ביניים'
-  
-  # Keywords for fallback extraction
-  court_keywords:
-    - 'בית המשפט'
-    - 'בית הדין'
-  
-  judge_keywords:
-    - 'כבוד השופט'
-    - 'כבוד השופטת'
-    - 'כבוד הדיין'
-    - 'כבוד הדיינים'
-    - 'הרב'
-  
-  case_keywords:
-    - 'תיק'
-    - 'ת.א.'
-    - 'ע"א'
-    - 'ע"מ'
-  
-  date_keywords:
-    - 'תאריך'
-    - 'תאריך:'
-    - 'תאריך:'
-  
-  party_keywords:
-    - 'תובע'
-    - 'נתבע'
-    - 'בין'
-    - 'לבין'
-  
-  verdict_type_keywords:
-    - 'פסק דין'
-    - 'החלטה'
-    - 'צו'
-  
-  # Performance settings
-  max_lines_to_scan: 20
-  confidence_threshold: 0.7 
+sqlite_db_path: "data/verdicts.db" 
