@@ -90,7 +90,7 @@ class TestFileParser:
         
         assert result is None
         
-    @patch('PyPDF2.PdfReader')
+    @patch('src.parser.PdfReader')
     def test_parse_pdf_success(self, mock_pdf_reader, parser, temp_dir):
         """Test successful PDF parsing"""
         # Mock PDF pages
@@ -111,7 +111,7 @@ class TestFileParser:
         
         assert result == "First page content\nSecond page content"
         
-    @patch('PyPDF2.PdfReader')
+    @patch('src.parser.PdfReader')
     def test_parse_pdf_failure(self, mock_pdf_reader, parser, temp_dir):
         """Test PDF parsing failure"""
         mock_pdf_reader.side_effect = Exception("PDF error")
